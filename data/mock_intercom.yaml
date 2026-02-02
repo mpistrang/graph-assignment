@@ -1,0 +1,123 @@
+# Mock Intercom tickets for development and testing
+# This is the PUBLIC version with generic/fictional data
+# For proprietary company data, create data/proprietary/mock_intercom.yaml (gitignored)
+
+tickets:
+  # TICKET 1: Should correlate with a database performance PR
+  ticket-001:
+    subject: "Customer list page taking forever to load"
+    body: "Since January 22nd, the customer list page is extremely slow. It used to load instantly but now takes 15-20 seconds. We have about 500 customers. The spinner just keeps going. This is really impacting our workflow."
+    customer_email: "sarah.johnson@acmecorp.com"
+    created_at: "2026-01-23T10:30:00Z"
+    tags: []
+    status: "open"
+
+  # TICKET 2: Should correlate with infrastructure/deployment changes
+  ticket-002:
+    subject: "Are there deployment issues? App seems unstable"
+    body: "We noticed some weird behavior starting around Jan 22. Sometimes pages fail to load completely, and we see occasional 502 errors. Is there something going on with your infrastructure? Our team has reported this across multiple browsers."
+    customer_email: "devops@techstartup.io"
+    created_at: "2026-01-23T14:00:00Z"
+    tags: []
+    status: "open"
+
+  # TICKET 3: Should correlate with recent deployment (same day)
+  ticket-003:
+    subject: "Getting 503 errors this morning"
+    body: "Starting around 10am EST today (Jan 26), we're getting intermittent 503 Service Unavailable errors. The app works sometimes but then fails. Is there an outage? We have a demo in 2 hours and need this resolved ASAP."
+    customer_email: "mike.chen@enterprise.com"
+    created_at: "2026-01-26T15:30:00Z"
+    tags: []
+    status: "open"
+
+  # TICKET 4: Recurring pattern - another performance issue
+  ticket-004:
+    subject: "Customer list won't load"
+    body: "The customer section won't load anymore. I click on customers and the list just shows loading forever. This started a few days ago. Other sections like Reports work fine."
+    customer_email: "jane.doe@propertymanagement.com"
+    created_at: "2026-01-24T09:00:00Z"
+    tags: []
+    status: "open"
+
+  # TICKET 5: Recurring pattern - third similar issue (establishes pattern)
+  ticket-005:
+    subject: "Cannot view customer records"
+    body: "Hi, multiple users on our team are reporting that customer records are not loading. We've tried different browsers and computers. Started happening this week. Is this a known issue?"
+    customer_email: "support@realestateco.com"
+    created_at: "2026-01-25T11:00:00Z"
+    tags: []
+    status: "open"
+
+  # TICKET 6: Unrelated ticket - no correlation expected
+  ticket-006:
+    subject: "How do I export customers to Excel?"
+    body: "I need to create a report of all our customers with their contact info. Is there a way to export this data to Excel or CSV? I looked in the Reports section but couldn't find it."
+    customer_email: "newuser@smallbiz.com"
+    created_at: "2026-01-25T16:00:00Z"
+    tags: []
+    status: "open"
+
+  # TICKET 7: Unrelated ticket - user question
+  ticket-007:
+    subject: "Adding custom fields to customers"
+    body: "Is it possible to add custom fields to customer records? We need to track additional information like preferred contact method and best time to call. Thanks!"
+    customer_email: "admin@communityassoc.org"
+    created_at: "2026-01-24T13:00:00Z"
+    tags: []
+    status: "open"
+
+  # TICKET 8: Could correlate with infrastructure changes
+  ticket-008:
+    subject: "App performance degraded after update"
+    body: "Not sure if you pushed an update recently, but starting around January 21-22, the whole app feels slower. API calls that used to be fast now timeout occasionally. Our users are complaining."
+    customer_email: "it.admin@largecorp.com"
+    created_at: "2026-01-23T08:00:00Z"
+    tags: []
+    status: "open"
+
+  # TICKET 9: Unrelated - feature request
+  ticket-009:
+    subject: "Request: Dark mode support"
+    body: "Would love to have a dark mode option. I work late hours and the bright white interface is hard on the eyes. Many other apps support this now."
+    customer_email: "nightowl@freelancer.com"
+    created_at: "2026-01-20T22:00:00Z"
+    tags: []
+    status: "open"
+
+  # TICKET 10: Another recurring pattern ticket
+  ticket-010:
+    subject: "Customer page timeout on large accounts"
+    body: "We have an account with 800+ customers and the customers tab times out every time. Shows 'Request timeout' after about 30 seconds. This account was working fine last month."
+    customer_email: "data.manager@bigcompany.com"
+    created_at: "2026-01-25T14:00:00Z"
+    tags: []
+    status: "open"
+
+  # ERROR TEST TICKETS - for testing validation and error handling
+
+  # ERROR TICKET 1: Empty body - should fail validation
+  ticket-error-001:
+    subject: "Help with something"
+    body: ""
+    customer_email: "test@example.com"
+    created_at: "2026-01-26T12:00:00Z"
+    tags: []
+    status: "open"
+
+  # ERROR TICKET 2: Missing subject - should fail validation
+  ticket-error-002:
+    subject: ""
+    body: "I have a problem but forgot to write a subject."
+    customer_email: "forgetful@example.com"
+    created_at: "2026-01-26T12:00:00Z"
+    tags: []
+    status: "open"
+
+  # ERROR TICKET 3: Both empty - should fail validation
+  ticket-error-003:
+    subject: ""
+    body: ""
+    customer_email: "empty@example.com"
+    created_at: "2026-01-26T12:00:00Z"
+    tags: []
+    status: "open"

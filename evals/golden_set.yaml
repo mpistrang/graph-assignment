@@ -1,0 +1,257 @@
+# Golden Set for Triage Graph Evaluation
+# Tests GRAPH RELIABILITY, not LLM correctness
+#
+# What we test:
+#   - Correct tool usage (right repos fetched based on classification)
+#   - Task completion (valid recommendation produced)
+#   - Hallucination resistance (matched_item exists in fetched data)
+#   - Graph completion (verified=True, no errors)
+#
+# What we DON'T test:
+#   - Whether LLM classification is "correct" (subjective)
+#   - Whether correlation was found (depends on live API data)
+#   - Specific confidence scores (LLM non-determinism)
+
+test_cases:
+  # =============================================================================
+  # CATEGORY 1: Tool Usage - Repo Selection (5 cases)
+  # Tests: Given a classification, did it fetch from the expected repos?
+  # =============================================================================
+
+  - id: "GS-01"
+    category: "tool_usage"
+    description: "Backend classification should fetch from backend repos"
+    ticket_id: "ticket-001"  # Customer list slow - likely backend
+    checks:
+      # We don't assert WHAT it classifies as, but IF backend, these repos
+      classification_to_repos:
+        backend: ["backend"]  # Must include backend repo
+        infra: ["infra"]      # Or if infra, must include infra repo
+      graph_completed: true
+      recommendation_valid: true
+
+  - id: "GS-02"
+    category: "tool_usage"
+    description: "Infrastructure issue should fetch from infra repos"
+    ticket_id: "ticket-003"  # 503 errors - likely infra
+    checks:
+      classification_to_repos:
+        infra: ["infra"]
+        backend: ["backend"]
+      graph_completed: true
+      recommendation_valid: true
+
+  - id: "GS-03"
+    category: "tool_usage"
+    description: "Frontend issue should fetch from frontend repos"
+    ticket_id: "ticket-009"  # Dark mode request - frontend
+    checks:
+      classification_to_repos:
+        frontend: ["frontend"]
+      graph_completed: true
+      recommendation_valid: true
+
+  - id: "GS-04"
+    category: "tool_usage"
+    description: "Unclear classification should fetch from multiple repos"
+    ticket_id: "ticket-006"  # Export question - could be unclear
+    checks:
+      classification_to_repos:
+        unclear: ["frontend", "backend"]  # Should search both
+        backend: ["backend"]
+        frontend: ["frontend"]
+      graph_completed: true
+      recommendation_valid: true
+
+  - id: "GS-05"
+    category: "tool_usage"
+    description: "Performance issue should fetch relevant repos"
+    ticket_id: "ticket-008"  # Performance degraded
+    checks:
+      classification_to_repos:
+        backend: ["backend"]
+        infra: ["infra"]
+        unclear: ["frontend", "backend"]
+      graph_completed: true
+      recommendation_valid: true
+
+  # =============================================================================
+  # CATEGORY 2: Task Completion (5 cases)
+  # Tests: Did the graph complete with all required outputs?
+  # =============================================================================
+
+  - id: "GS-06"
+    category: "task_completion"
+    description: "Graph must complete with verified=True"
+    ticket_id: "ticket-004"  # Changed from ticket-001 to reduce overlap
+    checks:
+      graph_completed: true
+      has_classification: true
+      has_correlation_result: true
+      has_recommendation: true
+      recommendation_valid: true
+
+  - id: "GS-07"
+    category: "task_completion"
+    description: "Recommendation must have required fields"
+    ticket_id: "ticket-002"
+    checks:
+      graph_completed: true
+      recommendation_has_fields:
+        - next_action
+        - next_action_reason
+        - suggested_tags
+      recommendation_valid: true
+
+  - id: "GS-08"
+    category: "task_completion"
+    description: "next_action must be one of valid options"
+    ticket_id: "ticket-004"
+    checks:
+      graph_completed: true
+      next_action_valid: true  # Must be escalate|get_more_info|reproduce
+      recommendation_valid: true
+
+  - id: "GS-09"
+    category: "task_completion"
+    description: "Correlation result must have required structure"
+    ticket_id: "ticket-005"
+    checks:
+      graph_completed: true
+      correlation_has_fields:
+        - correlated
+        - confidence
+        - reason
+      recommendation_valid: true
+
+  - id: "GS-10"
+    category: "task_completion"
+    description: "All state fields populated correctly"
+    ticket_id: "ticket-007"
+    checks:
+      graph_completed: true
+      has_classification: true
+      has_target_repos: true
+      has_correlation_result: true
+      has_recommendation: true
+      no_error: true
+
+  # =============================================================================
+  # CATEGORY 3: Hallucination Resistance (3 cases)
+  # Tests: If LLM claims correlation, does matched_item exist in fetched data?
+  # =============================================================================
+
+  - id: "GS-11"
+    category: "hallucination_resistance"
+    description: "matched_item must exist in fetched PRs or Linear tickets"
+    ticket_id: "ticket-008"  # Changed from ticket-001 to reduce overlap
+    checks:
+      graph_completed: true
+      matched_item_valid: true  # If claimed, must exist in fetched data
+      recommendation_valid: true
+
+  - id: "GS-12"
+    category: "hallucination_resistance"
+    description: "No invented PR titles or ticket IDs"
+    ticket_id: "ticket-002"
+    checks:
+      graph_completed: true
+      matched_item_valid: true
+      recommendation_valid: true
+
+  - id: "GS-13"
+    category: "hallucination_resistance"
+    description: "Correlation reason should reference real data"
+    ticket_id: "ticket-003"
+    checks:
+      graph_completed: true
+      matched_item_valid: true
+      recommendation_valid: true
+
+  # =============================================================================
+  # CATEGORY 4: Routing Logic (2 cases)
+  # Tests: Does routing function work correctly given inputs?
+  # =============================================================================
+
+  - id: "GS-14"
+    category: "routing"
+    description: "High confidence correlation should not trigger retry"
+    ticket_id: "ticket-010"  # Changed from ticket-001 to reduce overlap
+    checks:
+      graph_completed: true
+      # If correlated with high confidence, retry_count should be 0
+      # (We can't predict IF it will correlate, but IF it does with high conf, no retry)
+      max_retry_count: 2  # Should never exceed max retries
+      recommendation_valid: true
+
+  - id: "GS-15"
+    category: "routing"
+    description: "Graph should respect max retry limit"
+    ticket_id: "ticket-006"
+    checks:
+      graph_completed: true
+      max_retry_count: 2  # Must not exceed 2 retries
+      recommendation_valid: true
+
+  # =============================================================================
+  # CATEGORY 5: Error Handling (3 cases)
+  # Tests: Does the graph handle invalid inputs gracefully?
+  # =============================================================================
+
+  - id: "GS-16"
+    category: "error_handling"
+    description: "Empty body should fail validation"
+    ticket_id: "ticket-error-001"
+    checks:
+      graph_completed: false  # Should NOT complete successfully
+      has_error: true  # error field should be set
+
+  - id: "GS-17"
+    category: "error_handling"
+    description: "Missing subject should fail validation"
+    ticket_id: "ticket-error-002"
+    checks:
+      graph_completed: false  # Should NOT complete successfully
+      has_error: true  # error field should be set
+
+  - id: "GS-18"
+    category: "error_handling"
+    description: "Empty ticket should fail validation"
+    ticket_id: "ticket-error-003"
+    checks:
+      graph_completed: false  # Should NOT complete successfully
+      has_error: true  # error field should be set
+
+# =============================================================================
+# Check Definitions
+# =============================================================================
+check_definitions:
+  graph_completed:
+    description: "Graph finished with verified=True and no error"
+
+  recommendation_valid:
+    description: "next_action is one of: escalate, get_more_info, reproduce"
+
+  matched_item_valid:
+    description: "If correlation claimed, matched_item exists in fetched data"
+
+  classification_to_repos:
+    description: "Given the classification, correct repos were searched"
+
+  max_retry_count:
+    description: "retry_count did not exceed the specified maximum"
+
+  has_classification:
+    description: "issue_type field is populated"
+
+  has_correlation_result:
+    description: "correlation_result dict is populated"
+
+  has_recommendation:
+    description: "recommendation dict is populated"
+
+  no_error:
+    description: "error field is None"
+
+  has_error:
+    description: "error field is set (for testing error handling)"
